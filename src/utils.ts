@@ -2,6 +2,7 @@ import { S3Settings } from './settings';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
 import S3 from 'aws-sdk/clients/s3';
 import { GitlabHelper } from './gitlabHelper';
 
@@ -46,29 +47,50 @@ export const migrateAttachments = async (
       const relativePath = githubRepoId
         ? `${githubRepoId}/${newFileName}`
         : newFileName;
-      // Doesn't seem like it is easy to upload an issue to github, so upload to S3
-      //https://stackoverflow.com/questions/41581151/how-to-upload-an-image-to-use-in-issue-comments-via-github-api
 
-      const s3url = `https://${s3.bucket}.s3.amazonaws.com/${relativePath}`;
+      let s3url = `${relativePath}`;
 
-      const s3bucket = new S3();
-      s3bucket.createBucket(() => {
-        const params: S3.PutObjectRequest = {
-          Key: relativePath,
-          Body: attachmentBuffer,
-          ContentType: mimeType === false ? undefined : mimeType,
-          Bucket: s3.bucket,
-        };
+      if(s3.useS3){
+        // Doesn't seem like it is easy to upload an issue to github, so upload to S3
+        //https://stackoverflow.com/questions/41581151/how-to-upload-an-image-to-use-in-issue-comments-via-github-api
 
-        s3bucket.upload(params, function (err, data) {
-          console.log(`\tUploading ${basename} to ${s3url}... `);
-          if (err) {
-            console.log('ERROR: ', err);
-          } else {
-            console.log(`\t...Done uploading`);
-          }
+        s3url = `https://${s3.bucket}.s3.amazonaws.com/${relativePath}`;
+
+        const s3bucket = new S3();
+        s3bucket.createBucket(() => {
+          const params: S3.PutObjectRequest = {
+            Key: relativePath,
+            Body: attachmentBuffer,
+            ContentType: mimeType === false ? undefined : mimeType,
+            Bucket: s3.bucket,
+          };
+
+          s3bucket.upload(params, function (err, data) {
+            console.log(`\tUploading ${basename} to ${s3url}... `);
+            if (err) {
+              console.log('ERROR: ', err);
+            } else {
+              console.log(`\t...Done uploading`);
+            }
+          });
         });
-      });
+      };
+      if(s3.overrideURL){
+        // replace the attachment URL base with the configured value
+        // potentially useful if attachments are being stored in something other than S3...
+        s3url = `https://${s3.overrideURL}/${relativePath}${s3.overrideSuffix}`;
+      };
+      if(s3.keepLocal){
+        // keep a local copy of the attachment file
+        let localFile = `attachments/${relativePath}`;
+        let localFolder = path.dirname(localFile);
+        fs.mkdir(localFolder, { recursive: true }, function(err){
+          if(err){console.log('ERROR MSG: ', err)};
+        });
+        fs.writeFile(localFile, attachmentBuffer, function(err){
+          if(err){console.log('ERROR MSG: ', err)};
+        });
+      };
 
       // Add the new URL to the map
       offsetToAttachment[
