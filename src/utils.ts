@@ -86,9 +86,10 @@ export const migrateAttachments = async (
         let localFolder = path.dirname(localFile);
         fs.mkdir(localFolder, { recursive: true }, function(err){
           if(err){console.log('ERROR MSG: ', err)};
-        });
-        fs.writeFile(localFile, attachmentBuffer, function(err){
-          if(err){console.log('ERROR MSG: ', err)};
+          console.log(`about to create file ${localFile}. `);
+          fs.writeFile(localFile, attachmentBuffer, function(err){
+            if(err){console.log('ERROR MSG: ', err)};
+          });
         });
       };
 
