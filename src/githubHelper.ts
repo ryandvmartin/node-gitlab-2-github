@@ -1315,14 +1315,14 @@ export class GithubHelper {
       dateformatOptions
     );
 
-    const attribution = `In GitLab by @${item.author.username} on ${formattedDate}`;
+    const attribution = `*On GitLab by @${item.author.username} on ${formattedDate}*`;
     const lineRef =
       item && item.position
         ? GithubHelper.createLineRef(item.position, repoLink)
         : '';
     const summary = attribution + (lineRef ? `\n\n${lineRef}` : '');
 
-    return `${summary}\n\n${str}`;
+    return `${summary}\n\n---\n\n${str}`;
   }
 
   /**
