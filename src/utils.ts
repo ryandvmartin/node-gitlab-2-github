@@ -44,9 +44,7 @@ export const migrateAttachments = async (
       const hash = crypto.createHash('sha256');
       hash.update(url);
       const newFileName = hash.digest('hex') + '/' + basename;
-      const relativePath = githubRepoId
-        ? `${githubRepoId}/${newFileName}`
-        : newFileName;
+      const relativePath = `${newFileName}`;
 
       let s3url = `${relativePath}`;
 
