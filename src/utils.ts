@@ -76,7 +76,7 @@ export const migrateAttachments = async (
       if(s3.overrideURL){
         // replace the attachment URL base with the configured value
         // potentially useful if attachments are being stored in something other than S3...
-        s3url = `https://${s3.overrideURL}/${relativePath}${s3.overrideSuffix}`;
+        s3url = `${s3.overrideURL}/${relativePath}${s3.overrideSuffix}`;
       };
       if(s3.keepLocal){
         // keep a local copy of the attachment file
